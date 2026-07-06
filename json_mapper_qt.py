@@ -146,20 +146,24 @@ class MapperApp(QMainWindow):
         f = self.f_list.currentItem().text()
         if m not in self.mappings:
             self.mappings[m] = {}
-        self.mappings[m][p] = f
+        self.mappings[m][f] = p
         self.redraw_mappings()
 
     def redraw_mappings(self):
         self.map_text.clear()
         for model, fields in self.mappings.items():
             self.map_text.append(f"[{model}]")
-            for path, field in fields.items():
-                self.map_text.append(f"  {path} -> {field}")
+            for field, path in fields.items():
+                self.map_text.append(f"  {field} -> {path}")
             self.map_text.append("")
 
     def save(self):
-        with open("mapping.json", "w") as f: json.dump(self.mappings, f, indent=2)
-        QMessageBox.information(self, "Done", "Saved to mapping.json")
+        fp, _ = QFileDialog.getSaveFileName(self, "Save Mapping", "mapping.json", "JSON Files (*.json)")
+        if not fp:
+            return
+        with open(fp, "w") as f:
+            json.dump(self.mappings, f, indent=2)
+        QMessageBox.information(self, "Done", f"Saved to {fp}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
