@@ -21,6 +21,7 @@ env/
 output/
 output/*
 *.pdf
+*.json
 
 # IDE / Editor
 .vscode/
