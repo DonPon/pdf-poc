@@ -3,10 +3,10 @@ import sys
 import ast
 import json
 import os
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                              QHBoxLayout, QSplitter, QListWidget, QLineEdit, 
                              QPushButton, QLabel, QFileDialog, QMessageBox, QTextEdit)
-from PyQt6.QtCore import Qt
+from PyQt5.QtCore import Qt
 
 # --- Parser ---
 def get_models_metadata(models_file):
@@ -61,11 +61,11 @@ class MapperApp(QMainWindow):
         self.data = None
         self.mappings = {}
         
-        self.setWindowTitle("JSON Mapper (PyQt6)")
+        self.setWindowTitle("JSON Mapper (PyQt5)")
         self.resize(1000, 600)
         
         # Central Splitter
-        splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter = QSplitter(Qt.Horizontal)
         self.setCentralWidget(splitter)
         
         # Left Panel (Search)
@@ -167,4 +167,4 @@ if __name__ == "__main__":
     models = get_models_metadata(models_file)
     window = MapperApp(models)
     window.show()
-    sys.exit(app.exec())
+    sys.exit(app.exec_())
