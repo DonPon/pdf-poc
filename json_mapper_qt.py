@@ -97,9 +97,9 @@ class MapperApp(QMainWindow):
         btn_save = QPushButton("3. Save Mapping")
         btn_save.clicked.connect(self.save)
         
-        r_layout.addWidget(QLabel("Models:"))
+        r_layout.addWidget(QLabel("Tables (Models):"))
         r_layout.addWidget(self.m_list)
-        r_layout.addWidget(QLabel("Fields:"))
+        r_layout.addWidget(QLabel("Fields: field_name - (GUI name)"))
         r_layout.addWidget(self.f_list)
         r_layout.addWidget(btn_add)
         r_layout.addWidget(QLabel("Current Mappings:"))
@@ -135,7 +135,7 @@ class MapperApp(QMainWindow):
         if not self.m_list.currentItem(): return
         m = self.m_list.currentItem().text()
         self.f_list.clear()
-        for f in self.models[m]: self.f_list.addItem(f['name'])
+        for f in self.models[m]: self.f_list.addItem(f"{f['name']} ({f['verbose']})")
 
     def add(self):
         if not self.results.currentItem() or not self.m_list.currentItem() or not self.f_list.currentItem():
@@ -143,7 +143,8 @@ class MapperApp(QMainWindow):
             return
         p = self.results.currentItem().text().split(" = ")[0]
         m = self.m_list.currentItem().text()
-        f = self.f_list.currentItem().text()
+        f = self.models[m][self.f_list.currentRow()]['name']
+        
         if m not in self.mappings:
             self.mappings[m] = {}
         self.mappings[m][f] = p
