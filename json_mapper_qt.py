@@ -3,10 +3,12 @@ import sys
 import ast
 import json
 import os
+import random
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                              QHBoxLayout, QSplitter, QListWidget, QLineEdit, 
                              QPushButton, QLabel, QFileDialog, QMessageBox, QTextEdit)
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QPainter, QColor, QBrush
 
 # --- Parser ---
 def get_models_metadata(models_file):
@@ -53,6 +55,68 @@ def search_recursive(d, val, path, results):
             if isinstance(v, (dict, list)): search_recursive(v, val, p, results)
             elif val.lower() in str(v).lower(): results.append(f"{p} = {v}")
 
+# --- Confetti Overlay ---
+class ConfettiOverlay(QWidget):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setGeometry(parent.rect())
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.particles = []
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.animate)
+        self.hide()
+
+    def burst(self):
+        self.setGeometry(self.parent().rect())
+        self.particles = []
+        for _ in range(40):
+            x = random.randint(0, self.width())
+            y = random.randint(0, self.height() // 2)
+            color = QColor(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+            dx = random.uniform(-3, 3)
+            dy = random.uniform(-5, -1)
+            life = random.randint(30, 60)
+            self.particles.append([x, y, dx, dy, life, color])
+        self.show()
+        self.raise_()
+        self.timer.start(30)
+
+    def animate(self):
+        alive = []
+        for p in self.particles:
+            p[0] += p[2]
+            p[1] += p[3]
+            p[3] += 0.15  # gravity
+            p[4] -= 1
+            if p[4] > 0:
+                alive.append(p)
+        self.particles = alive
+        if not self.particles:
+            self.timer.stop()
+            self.hide()
+            return
+        self.update()
+
+    def stop(self):
+        self.particles = []
+        self.timer.stop()
+        self.hide()
+
+    def paintEvent(self, event):
+        if not self.particles:
+            return
+        painter = QPainter(self)
+        for p in self.particles:
+            alpha = min(255, int(p[4] * 8))
+            color = QColor(p[5])
+            color.setAlpha(alpha)
+            painter.setBrush(QBrush(color))
+            painter.setPen(Qt.NoPen)
+            painter.drawEllipse(int(p[0]), int(p[1]), 8, 8)
+        painter.end()
+
+
 # --- App ---
 class MapperApp(QMainWindow):
     def __init__(self, models):
@@ -60,6 +124,7 @@ class MapperApp(QMainWindow):
         self.models = models
         self.data = None
         self.mappings = {}
+        self.score = 0
         
         self.setWindowTitle("JSON Mapper (PyQt5)")
         self.resize(1000, 600)
@@ -112,6 +177,18 @@ class MapperApp(QMainWindow):
         splitter.setStretchFactor(1, 1)
         
         for m in self.models: self.m_list.addItem(m)
+        
+        self.score_label = QLabel("Score: 0")
+        self.score_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #2e7d32;")
+        r_layout.insertWidget(0, self.score_label)
+        
+        self.anim_label = QLabel("")
+        self.anim_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #ff6f00;")
+        self.anim_label.setAlignment(Qt.AlignCenter)
+        self.anim_label.hide()
+        r_layout.insertWidget(1, self.anim_label)
+        
+        self.confetti = ConfettiOverlay(self)
 
     def load(self):
         fp, _ = QFileDialog.getOpenFileName(self, "Open JSON")
@@ -149,6 +226,20 @@ class MapperApp(QMainWindow):
             self.mappings[m] = {}
         self.mappings[m][f] = p
         self.redraw_mappings()
+        self.score += 10
+        self.score_label.setText(f"Score: {self.score}")
+        self.show_animation()
+
+    def show_animation(self):
+        self.anim_label.setText("+10")
+        self.anim_label.show()
+        self.anim_label.setStyleSheet("font-size: 48px; font-weight: bold; color: #ff6f00;")
+        self.confetti.burst()
+        QTimer.singleShot(800, self.hide_animation)
+
+    def hide_animation(self):
+        self.anim_label.hide()
+        self.confetti.stop()
 
     def redraw_mappings(self):
         self.map_text.clear()
@@ -164,7 +255,7 @@ class MapperApp(QMainWindow):
             return
         with open(fp, "w") as f:
             json.dump(self.mappings, f, indent=2)
-        QMessageBox.information(self, "Done", f"Saved to {fp}")
+        QMessageBox.information(self, "Done", f"Saved to {fp}\n\nTotal Points Earned: {self.score}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
