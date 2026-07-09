@@ -226,12 +226,13 @@ class MapperApp(QMainWindow):
             self.mappings[m] = {}
         self.mappings[m][f] = p
         self.redraw_mappings()
-        self.score += 10
+        points_added = random.randint(1, 15)
+        self.score += points_added
         self.score_label.setText(f"Score: {self.score}")
-        self.show_animation()
+        self.show_animation(points_added)
 
-    def show_animation(self):
-        self.anim_label.setText("+10")
+    def show_animation(self, points):
+        self.anim_label.setText(f"+{points}")
         self.anim_label.show()
         self.anim_label.setStyleSheet("font-size: 48px; font-weight: bold; color: #ff6f00;")
         self.confetti.burst()
@@ -255,7 +256,8 @@ class MapperApp(QMainWindow):
             return
         with open(fp, "w") as f:
             json.dump(self.mappings, f, indent=2)
-        QMessageBox.information(self, "Done", f"Saved to {fp}\n\nTotal Points Earned: {self.score}")
+        #QMessageBox.information(self, "Done", f"Saved to {fp}\n\nTotal Points Earned: {self.score}")
+        QMessageBox.information(self, "Done", f"🎉 Saved successfully! 🎉\n📁 {fp}\n\n🏆 Total Points Earned: {self.score}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
