@@ -135,7 +135,7 @@ class MapperApp(QMainWindow):
         if not self.m_list.currentItem(): return
         m = self.m_list.currentItem().text()
         self.f_list.clear()
-        for f in self.models[m]: self.f_list.addItem(f"{f['name']} ({f['verbose']})")
+        for f in self.models[m]: self.f_list.addItem(f"{f['name']} - ({f['verbose']})")
 
     def add(self):
         if not self.results.currentItem() or not self.m_list.currentItem() or not self.f_list.currentItem():
@@ -144,7 +144,7 @@ class MapperApp(QMainWindow):
         p = self.results.currentItem().text().split(" = ")[0]
         m = self.m_list.currentItem().text()
         f = self.models[m][self.f_list.currentRow()]['name']
-        
+
         if m not in self.mappings:
             self.mappings[m] = {}
         self.mappings[m][f] = p
